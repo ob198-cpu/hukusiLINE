@@ -1,4 +1,5 @@
 import { officeGroups } from './office-schema.js';
+import { pagesMode, pagesApi } from './pages-mode.js';
 const state = { settings: null, selectedId: null, conversations: [] };
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -29,6 +30,7 @@ function toast(message) {
 }
 
 async function api(path, options = {}) {
+  if(pagesMode)return pagesApi(path,options);
   const response = await fetch(path, {
     ...options,
     headers: { "Content-Type": "application/json", ...(options.headers || {}) }
@@ -314,4 +316,11 @@ $("#testLineConnection").addEventListener("click", async () => {
     result.className = "connection-test-result error";
   }
 });
+if(pagesMode){
+ const notice=document.createElement('p');
+ notice.textContent='設定確認用のテスト画面です。保存先はこのブラウザのみです。LINE送受信・AI回答は未接続です。';
+ notice.style.cssText='margin:16px;padding:12px;background:#fff1d4;color:#664000;border-radius:6px';
+ document.querySelector('.app-header').after(notice);
+ for(const id of ['runTest','testOpenAiConnection','testLineConnection']){const el=document.getElementById(id);el.disabled=true;el.title='サーバー未接続';}
+}
 initialize();
