@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LINE問い合わせ管理</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/mode.css">
+  <link rel="stylesheet" href="/knowledge.css">
+  <link rel="stylesheet" href="/foundation.css">
+</head>
+<body>
+  <header class="app-header">
+    <div>
+      <p class="eyebrow">LINE INQUIRY DESK</p>
+      <h1 id="businessHeading">LINE問い合わせ管理</h1>
+    </div>
+    <div class="header-actions">
+      <span id="connectionBadge" class="status-badge">接続確認中</span>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-grid" aria-label="問い合わせ状況">
+      <article><span>未対応</span><strong id="countUnhandled">0</strong></article>
+      <article><span>至急確認</span><strong id="countUrgent">0</strong></article>
+      <article><span>対応中</span><strong id="countProgress">0</strong></article>
+      <article><span>自動回答済み</span><strong id="countAi">0</strong></article>
+    </section>
+
+    <nav class="tabs" aria-label="管理メニュー">
+      <button class="tab active" data-tab="inquiries" type="button">問い合わせ</button>
+      <button class="tab" data-tab="conditions" type="button">回答条件</button>
+      <button class="tab" data-tab="faqs" type="button">FAQ</button>
+      <button class="tab" data-tab="offices" type="button">事業所情報</button>
+      <button class="tab" data-tab="test" type="button">回答テスト</button>
+      <button class="tab" data-tab="setup" type="button">接続設定</button>
+    </nav>
+
+    <section id="tab-inquiries" class="tab-panel active">
+      <div class="toolbar">
+        <select id="statusFilter" aria-label="状態で絞り込み">
+          <option value="all">すべての状態</option>
+          <option value="unhandled">未対応</option>
+          <option value="urgent">至急確認</option>
+          <option value="in_progress">対応中</option>
+          <option value="ai_replied">自動回答済み</option>
+          <option value="closed">完了</option>
+        </select>
+        <input id="searchInput" type="search" placeholder="名前・内容で検索">
+        <button id="reloadButton" class="button secondary" type="button">更新</button>
+      </div>
+      <div class="inquiry-layout">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>状態</th><th>相手</th><th>分類</th><th>最新の内容</th><th>最終受信</th><th>件数</th></tr></thead>
+            <tbody id="conversationRows"><tr><td colspan="6" class="empty">読み込み中です</td></tr></tbody>
+          </table>
+        </div>
+        <aside id="conversationDetail" class="detail-panel">
+          <div class="empty-detail">左の一覧から問い合わせを選択してください。</div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="tab-conditions" class="tab-panel">
+      <div class="section-heading"><div><h2>自動回答の条件</h2><p>判断に迷う内容は自動回答せず、職員対応へ回します。</p></div><button id="saveConditions" class="button primary" type="button">条件を保存</button></div>
+      <fieldset class="mode-selector">
+        <legend>回答方式</legend>
+        <label><input type="radio" name="responseMode" value="rules_only"><span><strong>Pro内完結（APIなし）</strong><small>登録したFAQと定型文だけで回答し、それ以外は職員へ回します</small></span></label>
+        <label><input type="radio" name="responseMode" value="openai"><span><strong>OpenAI API使用</strong><small>FAQ外の内容もAIで分類します。API料金が別途発生します</small></span></label>
+      </fieldset>
+      <div class="settings-grid">
+        <label class="toggle-row"><span><strong>自動回答</strong><small>停止すると全件を職員対応にします</small></span><input id="autoReplyEnabled" type="checkbox"></label>
+        <label class="toggle-row"><span><strong>即時受付返信</strong><small>問い合わせ受信直後に受付済みを返信します</small></span><input id="acknowledgementEnabled" type="checkbox"></label>
+        <label class="toggle-row"><span><strong>営業時間外も自動回答</strong><small>無効の場合は翌営業時間の職員対応にします</small></span><input id="allowAfterHoursAi" type="checkbox"></label>
+        <label><span>自動回答の確信度</span><input id="confidenceThreshold" type="number" min="0" max="1" step="0.01"></label>
+        <label><span>AI自由回答の上限（登録FAQは継続回答）</span><input id="maxAutoReplies" type="number" min="0" max="20"></label>
+        <div class="field-pair"><label><span>営業時間 開始</span><input id="officeStart" type="time"></label><label><span>終了</span><input id="officeEnd" type="time"></label></div>
+      </div>
+      <div class="category-grid">
+        <label><input id="categoryNew" type="checkbox"><span><strong>新規相談</strong><small>自動回答を許可</small></span></label>
+        <label><input id="categoryRegistered" type="checkbox" disabled><span><strong>登録・利用中</strong><small>常に職員対応</small></span></label>
+        <label><input id="categoryOffice" type="checkbox" disabled><span><strong>福祉事業所から</strong><small>常に職員対応</small></span></label>
+        <label><input id="categoryGeneral" type="checkbox"><span><strong>一般案内</strong><small>自動回答を許可</small></span></label>
+      </div>
+      <div class="text-settings">
+        <label><span>即時受付メッセージ</span><textarea id="ackText" rows="3"></textarea></label>
+        <label><span>職員へ引き継ぐメッセージ</span><textarea id="handoffText" rows="3"></textarea></label>
+        <label><span>緊急時メッセージ</span><textarea id="emergencyText" rows="3"></textarea></label>
+        <label><span>緊急キーワード（読点区切り）</span><input id="emergencyKeywords" type="text"></label>
+        <label><span>登録・利用中キーワード（読点区切り）</span><input id="registeredKeywords" type="text"></label>
+        <label><span>福祉事業所キーワード（読点区切り）</span><input id="welfareOfficeKeywords" type="text"></label>
+        <label><span>必ず職員へ回すキーワード（読点区切り）</span><input id="handoffKeywords" type="text"></label>
+        <label><span>OpenAI API使用時の基本指示</span><textarea id="systemPrompt" rows="5"></textarea></label>
+      </div>
+    </section>
+
+    <section id="tab-faqs" class="tab-panel">
+      <div class="section-heading"><div><h2>回答に使用するFAQ</h2><p>AIは有効なFAQの範囲を超えて断定しません。</p></div><div class="button-row"><button id="addFaq" class="button secondary" type="button">FAQを追加</button><button id="saveFaqs" class="button primary" type="button">FAQを保存</button></div></div>
+      <div id="faqList" class="faq-list"></div>
+    </section>
+
+    <section id="tab-offices" class="tab-panel">
+      <div class="section-heading"><h2>事業所情報</h2><div class="button-row"><button id="addOffice" class="button secondary" type="button">事業所を追加</button><button id="saveOffices" class="button primary" type="button">事業所情報を保存</button></div></div>
+      <div id="officeList"></div>
+    </section>
+    <section id="tab-test" class="tab-panel">
+      <div class="section-heading"><div><h2>回答条件のテスト</h2><p>LINEへ送信せず、分類と回答結果だけを確認します。</p></div></div>
+      <div class="test-box">
+        <label><span>テストする問い合わせ</span><textarea id="testText" rows="5" placeholder="例：現在サービスを利用中です。受給者証について確認したいです。"></textarea></label>
+        <button id="runTest" class="button primary" type="button">判定する</button>
+        <div id="testResult" class="test-result" hidden></div>
+      </div>
+    </section>
+
+    <section id="tab-setup" class="tab-panel">
+      <div class="section-heading"><div><h2>本番接続の状態</h2><p>認証情報の値は画面に表示しません。</p></div></div>
+      <div class="setup-list">
+        <div><span>OpenAI APIキー</span><strong id="setupOpenAi">未設定</strong><a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer">APIキーページ</a></div>
+        <div><span>APIの支払い設定</span><strong>OpenAIで確認</strong><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noreferrer">請求設定</a></div>
+        <div><span>LINE Channel Secret</span><strong id="setupLineSecret">未設定</strong><a href="https://developers.line.biz/console/" target="_blank" rel="noreferrer">LINE Developers</a></div>
+        <div><span>LINE Access Token</span><strong id="setupLineToken">未設定</strong><a href="https://developers.line.biz/console/" target="_blank" rel="noreferrer">LINE Developers</a></div>
+        <div><span>公開HTTPS URL</span><strong id="setupPublicUrl">未設定</strong></div>
+        <div><span>動作モード</span><strong id="setupRunMode">テスト</strong></div>
+      </div>
+      <div class="setup-actions">
+        <button id="testOpenAiConnection" class="button primary" type="button">OpenAI接続テスト</button>
+        <button id="testLineConnection" class="button primary" type="button">LINE接続テスト</button>
+        <a class="button secondary" href="https://help.openai.com/ja-jp/articles/4936850-where-do-i-find-my-openai-api-key" target="_blank" rel="noreferrer">日本語のAPIキー案内</a>
+        <a class="button secondary" href="https://help.openai.com/ja-jp/articles/8264644-%E3%83%97%E3%83%AA%E3%83%9A%E3%82%A4%E3%83%89%E8%AB%8B%E6%B1%82%E3%81%AF%E3%81%A9%E3%81%AE%E3%82%88%E3%81%86%E3%81%AB%E8%A8%AD%E5%AE%9A%E3%81%99%E3%82%8C%E3%81%B0%E3%82%88%E3%81%84%E3%81%A7%E3%81%99%E3%81%8B" target="_blank" rel="noreferrer">日本語の請求案内</a>
+      </div>
+      <p id="connectionTestResult" class="connection-test-result" role="status"></p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

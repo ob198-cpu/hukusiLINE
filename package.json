@@ -1,0 +1,14 @@
+{
+  "name": "line-inquiry-ai-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "LINE inquiry bot with guarded AI replies and an operator dashboard",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test --test-concurrency=1"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

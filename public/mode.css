@@ -1,0 +1,111 @@
+.mode-selector {
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 14px;
+  margin: 0 0 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mode-selector legend {
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+.mode-selector label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 12px;
+  cursor: pointer;
+}
+
+.mode-selector input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  flex: 0 0 auto;
+}
+
+.mode-selector span {
+  display: grid;
+  gap: 3px;
+}
+
+.mode-selector small {
+  color: #687b90;
+}
+
+@media (max-width: 640px) {
+  .mode-selector {
+    grid-template-columns: 1fr;
+  }
+}
+
+.setup-list {
+  display: grid;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.setup-list > div {
+  min-height: 56px;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) minmax(100px, auto) minmax(140px, auto);
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.setup-list > div:last-child {
+  border-bottom: 0;
+}
+
+.setup-list a {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.setup-list strong {
+  color: #a42020;
+  white-space: nowrap;
+}
+
+.setup-list strong.configured {
+  color: var(--green);
+}
+
+.setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.connection-test-result {
+  min-height: 24px;
+  margin: 12px 0 0;
+  font-weight: 700;
+}
+
+.connection-test-result.ok {
+  color: var(--green);
+}
+
+.connection-test-result.error {
+  color: #a42020;
+}
+
+@media (max-width: 640px) {
+  .setup-list > div {
+    grid-template-columns: 1fr auto;
+  }
+
+  .setup-list a {
+    grid-column: 1 / -1;
+  }
+}
