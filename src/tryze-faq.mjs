@@ -75,7 +75,7 @@ export function matchOfficeFaq(text, settings) {
     }
   }
   if (faq.id === 'tryze-odori-trial' && Number(facts['体験日数']) > 0) {
-    return {action:'auto_reply',category:'general',confidence:1,reply:`体験利用について相談できます。現在の設定では体験日数は${Number(facts['体験日数'])}日です。受入れ可能な日程や持ち物は、011-252-7660（平日10:00〜17:00）へお問い合わせください。`,reason:'事業所情報: 体験日数',verifiedGuidance:true};
+    return {action:'auto_reply',category:'general',confidence:1,reply:`体験利用について相談できます。体験期間は${Number(facts['体験日数'])}日間です。受入れ可能な日程や持ち物は、011-252-7660（平日10:00〜17:00）へお問い合わせください。`,reason:'事業所情報: 体験日数',verifiedGuidance:true};
   }
   if (faq.id === 'tryze-odori-recruit' && ['募集中','募集停止'].includes(facts['現在の募集'])) {
     const recruiting = facts['現在の募集'] === '募集中';
@@ -83,7 +83,7 @@ export function matchOfficeFaq(text, settings) {
   }
   if (faq.id === 'tryze-odori-capacity' && ['空きあり','空きなし'].includes(facts['定員の空き'])) {
     const open = facts['定員の空き'] === '空きあり';
-    return {action:'auto_reply',category:'general',confidence:1,reply:open?'現在の設定では定員に空きがあります。ただし、最新の人数と個別の受入れ可否は変わる場合があるため、希望する開始時期を添えて011-252-7660（平日10:00〜17:00）へお問い合わせください。':'現在の設定では定員に空きがありません。待機や今後の見込みは、011-252-7660（平日10:00〜17:00）へお問い合わせください。',reason:'事業所情報: 定員の空き',verifiedGuidance:true};
+    return {action:'auto_reply',category:'general',confidence:1,reply:open?'定員には空きがあります。ただし、最新の人数と個別の受入れ可否は変わる場合があるため、希望する開始時期を添えて011-252-7660（平日10:00〜17:00）へお問い合わせください。':'定員に空きはありません。待機や今後の見込みは、011-252-7660（平日10:00〜17:00）へお問い合わせください。',reason:'事業所情報: 定員の空き',verifiedGuidance:true};
   }
   if (/b型|ビー型/.test(q) && !['tryze-odori-btype','tryze-odori-difference','tryze-odori-transfer','tryze-odori-agency'].includes(faq.id)) {
     return {action:'auto_reply',category:'general',confidence:1,reply:'トライズ大通はB型ではなく就労移行支援です。この窓口ではトライズ大通の利用相談・訓練・就職支援についてご案内しています。就労移行支援について知りたいことはありますか？',reason:'サービス種別確認',verifiedGuidance:true};
