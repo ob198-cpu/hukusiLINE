@@ -50,12 +50,41 @@ export function matchOfficeFaq(text, settings) {
   if (!target) return null;
   // Explicitly naming another office/service must not silently use Odori facts.
   if (/ベストジョイ|リライフ|札幌駅|さっぽろ駅|菊水/.test(q)) return null;
-  const faqs = settings.faqs.filter(f => f.enabled && f.verifiedGuidance && f.officeId === target);
+  // The built-in guidance is response knowledge, not user-created FAQ data.
+  // Keep it available even when the editable FAQ list is intentionally empty.
+  const configured = Array.isArray(settings.faqs) ? settings.faqs : [];
+  const byId = new Map(TRYZE_FAQS.map(f => [f.id, f]));
+  for (const faq of configured) byId.set(faq.id, faq);
+  const faqs = [...byId.values()].filter(f => f.enabled && f.verifiedGuidance && f.officeId === target);
   const exact = faqs.find(f => normalize(f.question).replace(/[?？。、]/g,'') === q.replace(/[?？。、]/g,''));
   const matches = faqs.map(f => ({ f, score: Math.max(0, ...f.keywords.filter(k => q.includes(normalize(k))).map(k => normalize(k).length)) })).filter(m => m.score > 0);
   matches.sort((a,b) => b.score-a.score);
   const faq = exact || matches[0]?.f;
   if (!faq) return null;
+  const office = (settings.offices || []).find(o => o.id === target && o.enabled);
+  const facts = office?.facts || {};
+  if (faq.id === 'tryze-odori-visit') {
+    const availableDate = facts['直近の見学空き日'];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(availableDate || '')) {
+      const [year, month, day] = availableDate.split('-').map(Number);
+      return {
+        action:'auto_reply', category:'general', confidence:1,
+        reply:`直近で見学をご案内できる日は${year}年${month}月${day}日です。空き状況は変わる場合があるため、予約確定は011-252-7660（平日10:00〜17:00）へお問い合わせください。`,
+        reason:'事業所情報: 直近の見学空き日', verifiedGuidance:true
+      };
+    }
+  }
+  if (faq.id === 'tryze-odori-trial' && Number(facts['体験日数']) > 0) {
+    return {action:'auto_reply',category:'general',confidence:1,reply:`体験利用について相談できます。現在の設定では体験日数は${Number(facts['体験日数'])}日です。受入れ可能な日程や持ち物は、011-252-7660（平日10:00〜17:00）へお問い合わせください。`,reason:'事業所情報: 体験日数',verifiedGuidance:true};
+  }
+  if (faq.id === 'tryze-odori-recruit' && ['募集中','募集停止'].includes(facts['現在の募集'])) {
+    const recruiting = facts['現在の募集'] === '募集中';
+    return {action:'auto_reply',category:'general',confidence:1,reply:recruiting?'現在、トライズ大通では利用者を募集しています。見学や利用相談は、011-252-7660（平日10:00〜17:00）または公式フォームからお申し込みください。個別の利用可否と開始日は担当者が確認します。':'現在、トライズ大通の利用者募集は停止中です。再開時期については、011-252-7660（平日10:00〜17:00）へお問い合わせください。',reason:'事業所情報: 現在の募集',verifiedGuidance:true};
+  }
+  if (faq.id === 'tryze-odori-capacity' && ['空きあり','空きなし'].includes(facts['定員の空き'])) {
+    const open = facts['定員の空き'] === '空きあり';
+    return {action:'auto_reply',category:'general',confidence:1,reply:open?'現在の設定では定員に空きがあります。ただし、最新の人数と個別の受入れ可否は変わる場合があるため、希望する開始時期を添えて011-252-7660（平日10:00〜17:00）へお問い合わせください。':'現在の設定では定員に空きがありません。待機や今後の見込みは、011-252-7660（平日10:00〜17:00）へお問い合わせください。',reason:'事業所情報: 定員の空き',verifiedGuidance:true};
+  }
   if (/b型|ビー型/.test(q) && !['tryze-odori-btype','tryze-odori-difference','tryze-odori-transfer','tryze-odori-agency'].includes(faq.id)) {
     return {action:'auto_reply',category:'general',confidence:1,reply:'トライズ大通はB型ではなく就労移行支援です。この窓口ではトライズ大通の利用相談・訓練・就職支援についてご案内しています。就労移行支援について知りたいことはありますか？',reason:'サービス種別確認',verifiedGuidance:true};
   }
