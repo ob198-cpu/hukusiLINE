@@ -318,9 +318,9 @@ $("#testLineConnection").addEventListener("click", async () => {
 });
 if(pagesMode){
  const notice=document.createElement('p');
- notice.textContent='設定確認用のテスト画面です。保存先はこのブラウザのみです。LINE送受信・AI回答は未接続です。';
+ notice.textContent='このブラウザに保存した設定・FAQ・事業所情報による回答テストができます。LINE送受信・OpenAI生成は未接続です。';
  notice.style.cssText='margin:16px;padding:12px;background:#fff1d4;color:#664000;border-radius:6px';
  document.querySelector('.app-header').after(notice);
- for(const id of ['runTest','testOpenAiConnection','testLineConnection']){const el=document.getElementById(id);el.disabled=true;el.title='サーバー未接続';}
+ for(const id of ['testOpenAiConnection','testLineConnection']){const el=document.getElementById(id);el.disabled=true;el.title='サーバー未接続';}
 }
 initialize();
